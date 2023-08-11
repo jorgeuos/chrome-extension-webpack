@@ -1,16 +1,12 @@
-# This is a fork
+# This is a fork of [sszczep/chrome-extension-webpack](https://github.com/sszczep/chrome-extension-webpack)
 
 Original project:
 [sszczep/chrome-extension-webpack](https://github.com/sszczep/chrome-extension-webpack)
 
 
-## Trying to add tailwindcss
+## Add tailwindcss
 
-I'm trying to add tailwindcss to this project.
-
-I'm following this guide:
-~~[How to use Tailwind CSS with Webpack](https://www.youtube.com/watch?v=bxmDnn7lrnk)~~
-[Setup Tailwind CSS with Webpack](https://levelup.gitconnected.com/setup-tailwind-css-with-webpack-3458be3eb547)
+I've added more extensive instructions on how to add tailwindcss to this project in [./docs/tailwind.md](./docs/tailwind.md)
 
 
 ```bash
@@ -20,16 +16,20 @@ npm install -D style-loader postcss postcss-loader postcss-preset-env tailwindcs
 Tweak the webpack config:
 
 ```diff
-diff --git a/webpack.common.cjs b/webpack.common.cjs
-index 468ec1c..726fca4 100644
---- a/webpack.common.cjs
-+++ b/webpack.common.cjs
-@@ -21,7 +21,7 @@ module.exports = {
+------------------------------ webpack.common.cjs ------------------------------
+index 468ec1c..213b226 100644
+@@ -21,7 +21,13 @@ module.exports = {
        },
        {
          test: /\.(scss|css)$/,
 -        use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
-+        use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader', 'postcss-loader'],
++        use: [
++          MiniCssExtractPlugin.loader,
++          'css-loader',
++          'postcss-loader',
++          'sass-loader'
++        ],
++        // use: ["style-loader", "css-loader", "postcss-loader", MiniCssExtractPlugin],
        },
      ],
    },
@@ -37,37 +37,70 @@ index 468ec1c..726fca4 100644
 
 Tweak the common.scss file:
 ```diff
-diff --git a/styles/common.scss b/styles/common.scss
-index 210aa06..ff8c082 100644
---- a/styles/common.scss
-+++ b/styles/common.scss
-@@ -1,4 +1,7 @@
+------------------------------ styles/common.scss ------------------------------
+index 210aa06..4dbf1ec 100644
+@@ -1,9 +1,7 @@
  @import 'normalize.css';
-+@tailwind base;
-+@tailwind components;
-+@tailwind utilities;
+-
+-body {
+-  background-color: #292d3e;
+-  color: #ffffff;
+-}
++@import "tailwindcss/base";
++@import "tailwindcss/components";
++@import "tailwindcss/utilities";
 
- body {
-   background-color: #292d3e;
+ .input-group {
+   display: flex;
 ```
 
-Generate a tailwind.config.js file:
+
+Generate a tailwind.config.cjs(**THIS WAS MY ISSUE, I used `.js` instead of `.cjs`**) file:
 ```bash
 npx tailwindcss init
 ```
-and add `./dist/*.html` to the purge array.
-
-
-Copy the following into postcss.config.js.
-
-```js
-const tailwindcss = require('tailwindcss');
-module.exports = {
-  plugins: [
-    'postcss-preset-env',
-    tailwindcss
-  ],
-};
+and modify the config:
+```diff
+----------------------------- tailwind.config.cjs -----------------------------
+new file mode 100644
+index 0000000..414508c
+@@ -0,0 +1,36 @@
++/** @type {import('tailwindcss').Config} */
++module.exports = {
++  content: [
++    './src/**/*.{html,js,ts}',
++    './static/**/*.{html,js,ts}',
++  ],
++  darkMode: ['class', '[data-mode="dark"]'],
++  theme: {
++    extend: {
++      fontFamily: {
++        sans: [
++          '"Nunito"',
++          'ui-sans-serif',
++          'system-ui',
++          '-apple-system',
++          '"system-ui"',
++          '"Segoe UI"',
++          'Roboto',
++          '"Helvetica Neue"',
++          'Arial',
++          '"Noto Sans"',
++          'sans-serif',
++          '"Apple Color Emoji"',
++          '"Segoe UI Emoji"',
++          '"Segoe UI Symbol"',
++          '"Noto Color Emoji"',
++        ],
++      },
++    },
++  },
++  plugins: [
++    require('@tailwindcss/forms')( {strategy: 'class'} ),
++    require('@tailwindcss/typography'),
++  ],
++}
++
 ```
 
 Add postcss-import to handle multiple css files:
@@ -75,7 +108,32 @@ Add postcss-import to handle multiple css files:
 npm install -D postcss-import
 ```
 
+Copy the following into `postcss.config.cjs`.
+```cjs
+module.exports = {
+  plugins: [
+    require('postcss-import'),
+    require('tailwindcss'),
+    require('autoprefixer'),
+  ],
+};
+```
 
+That should be it.
+
+## Now run and build your files
+
+```bash
+npm run build
+# Or
+npm run start
+```
+
+## Notes
+
+One way to use tailwindcss is to use the tailwindcss cli to watch the input.css file and output to the output.css file. Then use the output.css file in the html file.
+
+I haven't tried this yet, but it should work.
 ```bash
 npx tailwindcss -i ./src/input.css -o ./dist/style/output.css --watch
 ```
