@@ -9,10 +9,6 @@ Useful links:
 * [Webpack Postcss-loader - Official Docs](https://webpack.js.org/loaders/postcss-loader/)
 * [PostCSS - Official Docs](https://postcss.org/)
 
-
-
-
-
 This is my current setup:
 Directories:
 ```bash
@@ -112,12 +108,12 @@ module.exports = {
 `postcss.config.cjs`
 ```js
 module.exports = {
-    plugins: {
-      'postcss-import': {},
-      tailwindcss: {},
-      autoprefixer: {},
-    },
-  }
+  plugins: [
+    require('postcss-import'),
+    require('tailwindcss'),
+    require('autoprefixer'),
+  ],
+};
 ```
 
 `webpack.common.cjs`
@@ -145,7 +141,12 @@ module.exports = {
       },
       {
         test: /\.(scss|css)$/,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
+        use: [
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+          'postcss-loader',
+          'sass-loader'
+        ],
         // use: ["style-loader", "css-loader", "postcss-loader", MiniCssExtractPlugin],
       },
     ],
